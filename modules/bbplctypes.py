@@ -115,6 +115,7 @@ def tostr(name):
     ptr_var = safe_name(f"{buf}_ptr")
 
     if buf not in variables:
+        # создаём буфер
         declares.append(f"{buf}: times 20 db 0 ; buffer for {name}")
         declares.append(f"{len_var}: dd 0 ; length of {buf}")
         declares.append(f"{ptr_var}: dd 0 ; pointer to start of {buf}")
@@ -126,57 +127,28 @@ def tostr(name):
 
     asm_lines.append(f"; --- TOSTR {name} ({define}) → {buf} ---")
     safe = safe_name(name)
-    meta = var_types.get(safe, {})
-    is_reserved = meta.get('reserved', False)
-    value = variables.get(safe)
-    if is_reserved or isinstance(value, str):
-        if is_reserved:
-            asm_lines.append(f"lea esi, [{safe}]")
-            asm_lines.append("xor ecx, ecx")
-            asm_lines.append(f".tostr_len_{name}_{count}:")
-            asm_lines.append("cmp byte [esi + ecx], 0")
-            asm_lines.append(f"je .tostr_done_{name}_{count}")
-            asm_lines.append("inc ecx")
-            asm_lines.append(f"jmp .tostr_len_{name}_{count}")
-            asm_lines.append(f".tostr_done_{name}_{count}:")
-            asm_lines.append(f"mov [{len_var}], ecx")
-            asm_lines.append(f"lea edi, [{safe}]")
-            asm_lines.append(f"mov [{ptr_var}], edi")
-        else:
-            if isinstance(value, str):
-                if ',' in value:
-                    bytes_list = [b.strip() for b in value.split(',') if b.strip()]
-                    length = len(bytes_list) - (1 if bytes_list and bytes_list[-1] == '0' else 0)
-                else:
-                    length = len(value)
-            else:
-                length = 0
-            asm_lines.append(f"mov dword [{len_var}], {length}")
-            asm_lines.append(f"lea edi, [{safe}]")
-            asm_lines.append(f"mov [{ptr_var}], edi")
-    else:
-        if size == 1:
-            asm_lines.append(f"movzx eax, byte [{safe_name(name)}]")
-        elif size == 2:
-            asm_lines.append(f"movzx eax, word [{safe_name(name)}]")
-        else:
-            asm_lines.append(f"mov eax, [{safe_name(name)}]")
 
-        asm_lines.append(f"lea edi, [{buf} + 19]")
-        asm_lines.append(f"mov byte [edi], 0")
-        asm_lines.append(f"xor ecx, ecx")
-        asm_lines.append(f".tostr_loop_{name}_{count}:")
-        asm_lines.append(f"xor edx, edx")
-        asm_lines.append(f"mov ebx, 10")
-        asm_lines.append(f"div ebx")
-        asm_lines.append(f"add dl, '0'")
-        asm_lines.append(f"dec edi")
-        asm_lines.append(f"mov [edi], dl")
-        asm_lines.append(f"inc ecx")
-        asm_lines.append(f"test eax, eax")
-        asm_lines.append(f"jnz .tostr_loop_{name}_{count}")
-        asm_lines.append(f"mov [{len_var}], ecx")
-        asm_lines.append(f"mov [{ptr_var}], edi")
+    # Конвертируем число в ASCII
+    asm_lines.append(f"mov eax, [{safe}]")
+    asm_lines.append(f"lea edi, [{buf}+19]")  # конец буфера
+    asm_lines.append(f"mov byte [edi], 0")   # нуль-терминатор
+    asm_lines.append(f"xor ecx, ecx")       # счётчик длины
+
+    asm_lines.append(f".tostr_loop_{name}_{count}:")
+    asm_lines.append(f"xor edx, edx")
+    asm_lines.append(f"mov ebx, 10")
+    asm_lines.append(f"div ebx")             # eax/10 → eax, остаток → edx
+    asm_lines.append(f"add dl, '0'")         # в ASCII
+    asm_lines.append(f"dec edi")
+    asm_lines.append(f"mov [edi], dl")
+    asm_lines.append(f"inc ecx")
+    asm_lines.append(f"test eax, eax")
+    asm_lines.append(f"jnz .tostr_loop_{name}_{count}")
+
+    # сохраняем длину и указатель на начало строки
+    asm_lines.append(f"mov [{len_var}], ecx")
+    asm_lines.append(f"mov [{ptr_var}], edi")
+
 
 def toint(name):
     if name not in buffers_created or not buffers_created[name]:
@@ -191,25 +163,24 @@ def toint(name):
     size, _ = get_var_size(name)
 
     asm_lines.append(f"; --- TOINT {name} ({size*8}bit) ← {buf} ---")
-    
     asm_lines.append(f"cmp dword [{len_var}], 0")
     asm_lines.append(f"je .toint_skip_{name}_{count}")
 
     asm_lines.append(f"mov esi, [{ptr_var}]")
-    asm_lines.append("xor eax, eax")
-    asm_lines.append("xor ecx, ecx")
+    asm_lines.append(f"xor eax, eax")
+    asm_lines.append(f"xor ecx, ecx")
 
     asm_lines.append(f".toint_loop_{name}_{count}:")
-    asm_lines.append("movzx ebx, byte [esi]")
-    asm_lines.append("cmp bl, 0")
+    asm_lines.append(f"movzx ebx, byte [esi]")
+    asm_lines.append(f"cmp bl, 0")
     asm_lines.append(f"je .toint_done_{name}_{count}")
-    asm_lines.append("sub bl, '0'")
-    asm_lines.append("cmp bl, 9")
+    asm_lines.append(f"sub bl, '0'")
+    asm_lines.append(f"cmp bl, 9")
     asm_lines.append(f"ja .toint_done_{name}_{count}")
-    asm_lines.append("imul eax, eax, 10")
-    asm_lines.append("add eax, ebx")
-    asm_lines.append("inc esi")
-    asm_lines.append("inc ecx")
+    asm_lines.append(f"imul eax, eax, 10")
+    asm_lines.append(f"add eax, ebx")
+    asm_lines.append(f"inc esi")
+    asm_lines.append(f"inc ecx")
     asm_lines.append(f"jmp .toint_loop_{name}_{count}")
 
     asm_lines.append(f".toint_done_{name}_{count}:")
@@ -222,3 +193,30 @@ def toint(name):
 
     asm_lines.append(f".toint_skip_{name}_{count}:")
 
+def mov(dest, src):
+    dest_name = safe_name(dest)
+
+    try:
+        value = int(src)
+        asm_lines.append(f"mov dword [{dest_name}], {value}")
+        return
+    except ValueError:
+        pass
+
+    if (src.startswith('"') and src.endswith('"')) or (src.startswith("'") and src.endswith("'")):
+        string_literal = src[1:-1]
+        count = tostr_counter.get(string_literal, 0)
+        var_name = f"{safe_name('str')}_{count}"
+        tostr_counter[string_literal] = count + 1
+
+        declares.append(f"{var_name}: db {', '.join(str(ord(c)) for c in string_literal)}, 0")
+        asm_lines.append(f"lea eax, [{var_name}]")
+        asm_lines.append(f"mov [{dest_name}], eax")
+        return
+
+    src_name = safe_name(src)
+    if src_name not in variables:
+        print(f"Warning: переменная '{src}' не объявлена, создаем как 0")
+        declare(4, src_name, 0)
+    asm_lines.append(f"mov eax, [{src_name}]")
+    asm_lines.append(f"mov [{dest_name}], eax")

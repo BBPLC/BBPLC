@@ -1,6 +1,6 @@
 from modules.io import print_var, read_var, prtln
 from modules.math import add, sub, mul, div, sqr, pow
-from modules.bbplctypes import DATA_DEFINE, DATA_RESERVE, parse_declare, declare, toint, tostr, safe_name, get_var_size
+from modules.bbplctypes import DATA_DEFINE, DATA_RESERVE, parse_declare, declare, toint, tostr, safe_name, get_var_size, mov
 from modules import context_manager
 
 grammar = ["DECLARE", "RESERVE", "PRINT", "ADD", "SUB", "MUL","DIV","SQR","POW", "IF", "THEN", "ELSE", 
@@ -141,6 +141,10 @@ for line in code:
         goto(words[1])
     elif cmd == "PRTLN":
         prtln()  
+    elif cmd == "MOV":
+        dest = words[1]
+        src = words[2]
+        mov(dest, src)
     elif cmd == "IF":
         op1 = words[1]
         op = words[2]
