@@ -1,10 +1,10 @@
-from modules.io import print_var, read_var
+from modules.io import print_var, read_var, prtln
 from modules.math import add, sub, mul, div, sqr, pow
 from modules.bbplctypes import DATA_DEFINE, DATA_RESERVE, parse_declare, declare, toint, tostr, safe_name, get_var_size
 from modules import context_manager
 
 grammar = ["DECLARE", "RESERVE", "PRINT", "ADD", "SUB", "MUL","DIV","SQR","POW", "IF", "THEN", "ELSE", 
-            "ENDIF", "TOSTR", "TOINT", "LABEL", "GOTO", "MOV", "READ", "PUSH", "POP"]
+            "ENDIF", "TOSTR", "TOINT", "LABEL", "GOTO", "MOV", "READ", "PUSH", "POP", "PRTLN"]
 dataTypes = ["DB", "DW", "DD", "DP", "DQ", "DT"]
 
 def label(name):
@@ -105,8 +105,6 @@ for line in code:
             context_manager.variables[len_name] = 0
             context_manager.variables[ptr_name] = 0
 
-context_manager.declares.append("newline: db 10")
-
 for line in code:
     words = line.split()
     if not words:
@@ -141,6 +139,8 @@ for line in code:
         label(words[1])
     elif cmd == "GOTO":
         goto(words[1])
+    elif cmd == "PRTLN":
+        prtln()  
     elif cmd == "IF":
         op1 = words[1]
         op = words[2]
@@ -156,12 +156,6 @@ for line in code:
             if_lt(op1, op2, label_true, label_false)
         context_manager.asm_lines.append(f"{label_true}: ; THEN branch")
         context_manager.asm_lines.append(f"{label_false}: ; ELSE branch")
-
-context_manager.asm_lines.append("mov eax, 4")
-context_manager.asm_lines.append("mov ebx, 1")
-context_manager.asm_lines.append("lea ecx, [newline]")
-context_manager.asm_lines.append("mov edx, 1")
-context_manager.asm_lines.append("int 0x80")
 
 context_manager.asm_lines.append("mov eax, 1")
 context_manager.asm_lines.append("xor ebx, ebx")

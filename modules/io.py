@@ -112,3 +112,18 @@ def read_var(name):
             asm_lines.append(f"mov [{safe_name_var}], ax")
         else:
             asm_lines.append(f"mov [{safe_name_var}], eax")
+
+
+def prtln():
+    count = tostr_counter.get("newline", 0)
+
+    var_name = f"newline_{count}"
+
+    declares.append(f"{var_name}: db 10")
+
+    asm_lines.append("mov eax, 4")
+    asm_lines.append("mov ebx, 1")
+    asm_lines.append(f"lea ecx, [{var_name}]")
+    asm_lines.append("mov edx, 1")
+    asm_lines.append("int 0x80")
+    tostr_counter["newline"] = count + 1

@@ -2,8 +2,10 @@ DECLARE RESERVE RB n 4
 DECLARE DB greeting = "Enter a number: "
 
 PRINT greeting 
+PRTLN
 READ n
 DECLARE DB result = "The result is: "
 PRINT result
 TOSTR n
 PRINT n
+PRTLN
