@@ -1,5 +1,5 @@
 import re
-from modules.context_manager import variables, declares, buffers_created, tostr_counter, asm_lines
+from modules.context_manager import variables, var_types, declares, buffers_created, tostr_counter, asm_lines
 
 DATA_DEFINE = {1:"db", 2:"dw", 4:"dd", 6:"dp", 8:"dq", 10:"dt"}
 DATA_RESERVE = {1:"rb", 2:"rw", 4:"rd", 6:"rf", 8:"rq", 10:"rt"}
@@ -9,8 +9,18 @@ def safe_name(name):
     return f"var_{name}" if name in RESERVED_NAMES else name
 
 def get_var_size(name):
-    value = variables.get(name)
-    if isinstance(value, int):
+    key = safe_name(name)
+    meta = var_types.get(key)
+    if meta:
+        size = meta.get('size', 4)
+        define = meta.get('define', DATA_DEFINE.get(size, "dd"))
+        return size, define
+
+    value = variables.get(key)
+    if value is None:
+        print(f"Warning: variable '{name}' used before declaration, assuming 32-bit")
+        size = 4
+    elif isinstance(value, int):
         size = 4
     elif isinstance(value, str) and ',' in value:
         size = len([b for b in value.split(',') if b.strip()])
@@ -20,27 +30,78 @@ def get_var_size(name):
     return size, define
 
 def parse_declare(line):
-    m = re.match(r'DECLARE\s+(\w+)\s+(\w+)\s*=\s*(.+)', line)
+    m = re.match(r'DECLARE\s+(RESERVE\s+)?(\w+)\s+(\w+)(?:\s*=\s*(.+))?', line)
     if not m:
-        return None, None, None
-    var_type, var_name, var_value = m.groups()
-    var_value = var_value.strip()
-    if var_value.startswith("'") and var_value.endswith("'"):
-        var_value = var_value[1:-1]
-        var_value = ', '.join(str(ord(c)) for c in var_value) + ", 0"
-        var_type = "DB"
-    return var_type, var_name, var_value
+        return None, None, None, False
+    reserve_flag = bool(m.group(1))
+    var_type = m.group(2)
+    var_name = m.group(3)
+    var_value = m.group(4)
+    if var_value is not None:
+        var_value = var_value.strip()
+        if (var_value.startswith("'") and var_value.endswith("'")) or \
+           (var_value.startswith('"') and var_value.endswith('"')):
+            var_value = var_value[1:-1]
+            var_value = ', '.join(str(ord(c)) for c in var_value) + ", 0"
+            var_type = "DB"
+    return var_type, var_name, var_value, reserve_flag
 
 def declare(type_or_size, name, value=None, reserve=False):
     name = safe_name(name)
     if isinstance(type_or_size, int):
-        size = type_or_size
-        type_define = DATA_RESERVE[size] if reserve else DATA_DEFINE[size]
+        base_size = type_or_size
+        base_define = DATA_RESERVE[base_size] if reserve else DATA_DEFINE[base_size]
     else:
-        type_define = type_or_size.upper()
+        base_define = type_or_size.upper()
+        base_size = next((s for s,d in DATA_RESERVE.items() if d == base_define.lower()), None)
+        if base_size is None:
+            base_size = next((s for s,d in DATA_DEFINE.items() if d == base_define.lower()), 4)
+    reserve_flag = reserve or base_define.lower().startswith('r')
+
+    size = base_size
+    if reserve_flag and value is None:
+        size = 4
+    elif reserve_flag and value is not None:
+        try:
+            cnt = int(value)
+            size = cnt
+        except ValueError:
+            pass
+
+    if isinstance(value, str) and ',' in value and not reserve_flag:
+        count = len([b for b in value.split(',') if b.strip()])
+        size = count
+        base_define = DATA_DEFINE.get(size, DATA_DEFINE.get(1))
+    type_define = base_define
+
+    var_types[name] = {'size': size, 'define': type_define, 'reserved': reserve_flag}
     variables[name] = value if value is not None else 0
-    if reserve or value is None:
-        declares.append(f"{name}: {type_define} {10 if type_define.startswith('r') else ''} dup(0) ; reserved")
+
+    if value is not None:
+        if isinstance(value, int):
+            bits = size * 8
+            maxv = (1 << (bits - 1)) - 1
+            minv = -(1 << (bits - 1))
+            if not (minv <= value <= maxv):
+                print(f"Warning: initial value {value} does not fit in {bits}-bit type {type_define}")
+        elif isinstance(value, str) and ',' in value:
+            count = len([b for b in value.split(',') if b.strip()])
+            if count > size:
+                print(f"Warning: string initializer for {name} too long ({count} bytes) for {size}-byte type")
+
+    if reserve_flag or value is None:
+        if reserve_flag and value is not None and not isinstance(value, str):
+            pass
+        if reserve_flag and value is not None and not isinstance(value, str):
+            pass
+        if reserve_flag and value is not None and isinstance(value, str) and not value.isdigit():
+            print(f"Warning: initial value for reserved variable {name} ignored")
+        reserve_def = DATA_RESERVE.get(base_size)
+        count = size
+        if reserve_def:
+            declares.append(f"{name}: {reserve_def} {count}")
+        else:
+            declares.append(f"{name}: db {count} ; reserved")
     else:
         declares.append(f"{name}: {type_define} {value}")
 
@@ -64,28 +125,58 @@ def tostr(name):
     buffers_created.setdefault(name, []).append(count)
 
     asm_lines.append(f"; --- TOSTR {name} ({define}) → {buf} ---")
-    if size == 1:
-        asm_lines.append(f"movzx eax, byte [{safe_name(name)}]")
-    elif size == 2:
-        asm_lines.append(f"movzx eax, word [{safe_name(name)}]")
+    safe = safe_name(name)
+    meta = var_types.get(safe, {})
+    is_reserved = meta.get('reserved', False)
+    value = variables.get(safe)
+    if is_reserved or isinstance(value, str):
+        if is_reserved:
+            asm_lines.append(f"lea esi, [{safe}]")
+            asm_lines.append("xor ecx, ecx")
+            asm_lines.append(f".tostr_len_{name}_{count}:")
+            asm_lines.append("cmp byte [esi + ecx], 0")
+            asm_lines.append(f"je .tostr_done_{name}_{count}")
+            asm_lines.append("inc ecx")
+            asm_lines.append(f"jmp .tostr_len_{name}_{count}")
+            asm_lines.append(f".tostr_done_{name}_{count}:")
+            asm_lines.append(f"mov [{len_var}], ecx")
+            asm_lines.append(f"lea edi, [{safe}]")
+            asm_lines.append(f"mov [{ptr_var}], edi")
+        else:
+            if isinstance(value, str):
+                if ',' in value:
+                    bytes_list = [b.strip() for b in value.split(',') if b.strip()]
+                    length = len(bytes_list) - (1 if bytes_list and bytes_list[-1] == '0' else 0)
+                else:
+                    length = len(value)
+            else:
+                length = 0
+            asm_lines.append(f"mov dword [{len_var}], {length}")
+            asm_lines.append(f"lea edi, [{safe}]")
+            asm_lines.append(f"mov [{ptr_var}], edi")
     else:
-        asm_lines.append(f"mov eax, [{safe_name(name)}]")
+        if size == 1:
+            asm_lines.append(f"movzx eax, byte [{safe_name(name)}]")
+        elif size == 2:
+            asm_lines.append(f"movzx eax, word [{safe_name(name)}]")
+        else:
+            asm_lines.append(f"mov eax, [{safe_name(name)}]")
 
-    asm_lines.append(f"lea edi, [{buf} + 19]")
-    asm_lines.append(f"mov byte [edi], 0")
-    asm_lines.append(f"xor ecx, ecx")
-    asm_lines.append(f".tostr_loop_{name}_{count}:")
-    asm_lines.append(f"xor edx, edx")
-    asm_lines.append(f"mov ebx, 10")
-    asm_lines.append(f"div ebx")
-    asm_lines.append(f"add dl, '0'")
-    asm_lines.append(f"dec edi")
-    asm_lines.append(f"mov [edi], dl")
-    asm_lines.append(f"inc ecx")
-    asm_lines.append(f"test eax, eax")
-    asm_lines.append(f"jnz .tostr_loop_{name}_{count}")
-    asm_lines.append(f"mov [{len_var}], ecx")
-    asm_lines.append(f"mov [{ptr_var}], edi")
+        asm_lines.append(f"lea edi, [{buf} + 19]")
+        asm_lines.append(f"mov byte [edi], 0")
+        asm_lines.append(f"xor ecx, ecx")
+        asm_lines.append(f".tostr_loop_{name}_{count}:")
+        asm_lines.append(f"xor edx, edx")
+        asm_lines.append(f"mov ebx, 10")
+        asm_lines.append(f"div ebx")
+        asm_lines.append(f"add dl, '0'")
+        asm_lines.append(f"dec edi")
+        asm_lines.append(f"mov [edi], dl")
+        asm_lines.append(f"inc ecx")
+        asm_lines.append(f"test eax, eax")
+        asm_lines.append(f"jnz .tostr_loop_{name}_{count}")
+        asm_lines.append(f"mov [{len_var}], ecx")
+        asm_lines.append(f"mov [{ptr_var}], edi")
 
 def toint(name):
     if name not in buffers_created or not buffers_created[name]:

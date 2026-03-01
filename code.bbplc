@@ -1,11 +1,9 @@
-DECLARE DB str = 'Hello, World!'
+DECLARE RESERVE RB n 4
+DECLARE DB greeting = "Enter a number: "
 
-PRINT str
-
-DECLARE DB num = 14
-TOSTR num
-PRINT num
-
-DECLARE DB num2 = 88
-TOSTR num2
-PRINT num2
+PRINT greeting 
+READ n
+DECLARE DB result = "The result is: "
+PRINT result
+TOSTR n
+PRINT n

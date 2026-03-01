@@ -1,9 +1,9 @@
-from modules.io import print_var
+from modules.io import print_var, read_var
 from modules.math import add, sub, mul, div, sqr, pow
 from modules.bbplctypes import DATA_DEFINE, DATA_RESERVE, parse_declare, declare, toint, tostr, safe_name, get_var_size
 from modules import context_manager
 
-grammar = ["DECLARE", "PRINT", "ADD", "SUB", "MUL","DIV","SQR","POW", "IF", "THEN", "ELSE", 
+grammar = ["DECLARE", "RESERVE", "PRINT", "ADD", "SUB", "MUL","DIV","SQR","POW", "IF", "THEN", "ELSE", 
             "ENDIF", "TOSTR", "TOINT", "LABEL", "GOTO", "MOV", "READ", "PUSH", "POP"]
 dataTypes = ["DB", "DW", "DD", "DP", "DQ", "DT"]
 
@@ -59,7 +59,10 @@ def if_lt(op1, op2, label_true, label_false):
     context_manager.asm_lines.append(f"jmp {label_false}")
 
 
-with open('code.bbplc') as f:
+import sys
+
+src_file = sys.argv[1] if len(sys.argv) > 1 else 'code.bbplc'
+with open(src_file) as f:
     lines = f.readlines()
 
 code = [line.strip() for line in lines if line.strip()]
@@ -69,9 +72,9 @@ for line in code:
     words = line.split()
     cmd = words[0]
     if cmd == "DECLARE":
-        var_type, var_name, var_value = parse_declare(line)
+        var_type, var_name, var_value, reserve_flag = parse_declare(line)
         if var_type:
-            declare(var_type, var_name, var_value)
+            declare(var_type, var_name, var_value, reserve_flag)
 
 for line in code:
     words = line.split()
@@ -102,11 +105,13 @@ for line in code:
             context_manager.variables[len_name] = 0
             context_manager.variables[ptr_name] = 0
 
-context_manager.asm_lines[:0] = ["format ELF executable 4", "entry start", ""] + context_manager.declares
-context_manager.asm_lines.append("start:")
+context_manager.declares.append("newline: db 10")
 
 for line in code:
     words = line.split()
+    if not words:
+        continue
+
     cmd = words[0]
     if cmd == "DECLARE":
         continue
@@ -129,6 +134,9 @@ for line in code:
     elif cmd == "PRINT":
         name = words[1]
         print_var(name)
+    elif cmd == "READ":
+        name = words[1]
+        read_var(name)
     elif cmd == "LABEL":
         label(words[1])
     elif cmd == "GOTO":
@@ -149,9 +157,23 @@ for line in code:
         context_manager.asm_lines.append(f"{label_true}: ; THEN branch")
         context_manager.asm_lines.append(f"{label_false}: ; ELSE branch")
 
+context_manager.asm_lines.append("mov eax, 4")
+context_manager.asm_lines.append("mov ebx, 1")
+context_manager.asm_lines.append("lea ecx, [newline]")
+context_manager.asm_lines.append("mov edx, 1")
+context_manager.asm_lines.append("int 0x80")
+
 context_manager.asm_lines.append("mov eax, 1")
 context_manager.asm_lines.append("xor ebx, ebx")
 context_manager.asm_lines.append("int 0x80")
+
+context_manager.asm_lines.append(".overflow:")
+context_manager.asm_lines.append("; simple overflow trap")
+context_manager.asm_lines.append("mov eax, 1")
+context_manager.asm_lines.append("mov ebx, 1")
+context_manager.asm_lines.append("int 0x80")
+
+context_manager.asm_lines[:0] = ["format ELF executable 4", "entry start", ""] + context_manager.declares + ["start:"]
 
 with open("output.asm", "w") as f:
     f.write("\n".join(context_manager.asm_lines))
