@@ -115,7 +115,6 @@ def tostr(name):
     ptr_var = safe_name(f"{buf}_ptr")
 
     if buf not in variables:
-        # создаём буфер
         declares.append(f"{buf}: times 20 db 0 ; buffer for {name}")
         declares.append(f"{len_var}: dd 0 ; length of {buf}")
         declares.append(f"{ptr_var}: dd 0 ; pointer to start of {buf}")
@@ -128,24 +127,21 @@ def tostr(name):
     asm_lines.append(f"; --- TOSTR {name} ({define}) → {buf} ---")
     safe = safe_name(name)
 
-    # Конвертируем число в ASCII
     asm_lines.append(f"mov eax, [{safe}]")
-    asm_lines.append(f"lea edi, [{buf}+19]")  # конец буфера
-    asm_lines.append(f"mov byte [edi], 0")   # нуль-терминатор
-    asm_lines.append(f"xor ecx, ecx")       # счётчик длины
+    asm_lines.append(f"lea edi, [{buf}+19]")
+    asm_lines.append(f"mov byte [edi], 0")
+    asm_lines.append(f"xor ecx, ecx")
 
     asm_lines.append(f".tostr_loop_{name}_{count}:")
     asm_lines.append(f"xor edx, edx")
     asm_lines.append(f"mov ebx, 10")
-    asm_lines.append(f"div ebx")             # eax/10 → eax, остаток → edx
-    asm_lines.append(f"add dl, '0'")         # в ASCII
+    asm_lines.append(f"div ebx")
+    asm_lines.append(f"add dl, '0'")
     asm_lines.append(f"dec edi")
     asm_lines.append(f"mov [edi], dl")
     asm_lines.append(f"inc ecx")
     asm_lines.append(f"test eax, eax")
     asm_lines.append(f"jnz .tostr_loop_{name}_{count}")
-
-    # сохраняем длину и указатель на начало строки
     asm_lines.append(f"mov [{len_var}], ecx")
     asm_lines.append(f"mov [{ptr_var}], edi")
 

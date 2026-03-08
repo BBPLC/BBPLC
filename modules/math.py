@@ -171,3 +171,30 @@ def pow(op1, op2):
         asm_lines.append(f"jnz .pow_loop_{op1_safe}")
         asm_lines.append(f".pow_done_{op1_safe}:")
         asm_lines.append(f"mov [{op1_safe}], eax")
+
+def sin():
+    pass
+
+def cos():
+    pass
+
+def tan():
+    pass
+
+def ctan():
+    pass
+
+def asin():
+    pass
+
+def acos():
+    pass
+
+def factorial():
+    pass
+
+def log():
+    pass
+
+def log10():
+    pass
