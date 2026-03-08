@@ -12,7 +12,6 @@ class TokenKind(Enum):
     NEWLINE = auto()
     EOF = auto()
 
-    # ключевые слова / команды
     DECLARE = auto()
     RESERVE = auto()
     ADD = auto()
@@ -37,6 +36,15 @@ class TokenKind(Enum):
     PRTLN = auto()
     ALLOC = auto()
     FREE = auto()
+    MALLOC = auto()
+    REALLOC = auto()
+    SIZEOF = auto()
+    REG = auto()
+    LOAD = auto()
+    STORE = auto()
+    CLEAR = auto()
+    INC = auto()
+    DEC = auto()
 
     # операторы
     EQ = auto()       # ==
@@ -71,6 +79,15 @@ KEYWORDS = {
     "PRTLN": TokenKind.PRTLN,
     "ALLOC": TokenKind.ALLOC,
     "FREE": TokenKind.FREE,
+    "MALLOC": TokenKind.MALLOC,
+    "REALLOC": TokenKind.REALLOC,
+    "SIZEOF": TokenKind.SIZEOF,
+    "REG": TokenKind.REG,
+    "LOAD": TokenKind.LOAD,
+    "STORE": TokenKind.STORE,
+    "CLEAR": TokenKind.CLEAR,
+    "INC": TokenKind.INC,
+    "DEC": TokenKind.DEC,
 }
 
 

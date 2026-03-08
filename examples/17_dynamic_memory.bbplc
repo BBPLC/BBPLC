@@ -1,0 +1,27 @@
+; Example 17: Dynamic memory allocation
+; Demonstrates: MALLOC, FREE, SIZEOF
+
+DECLARE DD buffer_size = 64
+DECLARE DD buffer_ptr = 0
+DECLARE DD size_result = 0
+
+DECLARE DB alloc_msg = "Allocated 64 bytes of memory"
+DECLARE DB size_msg = "Size of buffer_size variable: "
+DECLARE DB free_msg = "Memory freed"
+
+; Allocate memory
+MALLOC buffer_ptr buffer_size
+PRINT alloc_msg
+PRTLN
+
+; Get size of a variable
+SIZEOF buffer_size size_result
+PRINT size_msg
+TOSTR size_result
+PRINT size_result
+PRTLN
+
+; Free memory
+FREE buffer_ptr
+PRINT free_msg
+PRTLN

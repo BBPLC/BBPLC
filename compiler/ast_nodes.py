@@ -124,3 +124,43 @@ class If(Node):
     then_body: List[Node]
     else_body: List[Node]
 
+
+@dataclass
+class Push(Node):
+    value: Identifier
+
+
+@dataclass
+class Pop(Node):
+    target: Identifier
+
+
+@dataclass
+class Malloc(Node):
+    target: Identifier
+    size: Expr
+
+
+@dataclass
+class Realloc(Node):
+    target: Identifier
+    new_size: Expr
+
+
+@dataclass
+class Free(Node):
+    target: Identifier
+
+
+@dataclass
+class Sizeof(Node):
+    target: Identifier
+    result: Identifier
+
+
+@dataclass
+class Reg(Node):
+    register: str  # 'eax', 'ebx', etc.
+    operation: str  # 'load', 'store', 'add', etc.
+    variable: Optional[Expr]  # Can be Identifier, NumberLiteral, or None for unary ops
+

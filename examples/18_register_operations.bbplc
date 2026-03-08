@@ -1,0 +1,44 @@
+; Example 18: Register operations
+; Demonstrates: REG with various operations
+
+DECLARE DD number = 10
+DECLARE DD result = 0
+
+DECLARE DB load_msg = "Loaded value into register"
+DECLARE DB add_msg = "Added 5 to register value"
+DECLARE DB store_msg = "Stored register to variable: "
+
+; Load variable into register
+REG EAX LOAD number
+PRINT load_msg
+PRTLN
+
+; Add value to register
+REG EAX ADD 5
+PRINT add_msg
+PRTLN
+
+; Store register value to variable
+REG EAX STORE result
+PRINT store_msg
+TOSTR result
+PRINT result
+PRTLN
+
+; Clear register
+REG EBX CLEAR
+
+; Increment register
+REG EBX INC
+REG EBX INC
+REG EBX INC
+
+; Store result
+DECLARE DD counter = 0
+REG EBX STORE counter
+
+DECLARE DB counter_msg = "Counter value: "
+PRINT counter_msg
+TOSTR counter
+PRINT counter
+PRTLN

@@ -26,6 +26,13 @@ from .ast_nodes import (
     Toint,
     Prtln,
     If,
+    Push,
+    Pop,
+    Malloc,
+    Realloc,
+    Free,
+    Sizeof,
+    Reg,
 )
 
 
@@ -132,6 +139,20 @@ class Parser:
             return self._prtln()
         if kind is TokenKind.IF:
             return self._if_stmt()
+        if kind is TokenKind.PUSH:
+            return self._push()
+        if kind is TokenKind.POP:
+            return self._pop()
+        if kind is TokenKind.MALLOC:
+            return self._malloc()
+        if kind is TokenKind.REALLOC:
+            return self._realloc()
+        if kind is TokenKind.FREE:
+            return self._free()
+        if kind is TokenKind.SIZEOF:
+            return self._sizeof()
+        if kind is TokenKind.REG:
+            return self._reg()
 
         raise SyntaxError(f"Неожиданное начало оператора: {kind.name}")
 
@@ -221,7 +242,6 @@ class Parser:
         return Prtln()
 
     def _if_stmt(self) -> If:
-        # Поддерживаем многострочный IF ... THEN ... [ELSE ...] ENDIF
         self._match(TokenKind.IF)
         left = self._expr()
         op_tok = self._match(TokenKind.EQ, TokenKind.LT, TokenKind.GT)
@@ -253,4 +273,82 @@ class Parser:
         self._match(TokenKind.ENDIF)
         self._consume_newline()
         return If(left=left, op=op, right=right, then_body=then_body, else_body=else_body)
+
+    def _push(self) -> Push:
+        self._match(TokenKind.PUSH)
+        value = self._identifier()
+        self._consume_newline()
+        return Push(value=value)
+
+    def _pop(self) -> Pop:
+        self._match(TokenKind.POP)
+        target = self._identifier()
+        self._consume_newline()
+        return Pop(target=target)
+
+    def _malloc(self) -> Malloc:
+        self._match(TokenKind.MALLOC)
+        target = self._identifier()
+        size = self._expr()
+        self._consume_newline()
+        return Malloc(target=target, size=size)
+
+    def _realloc(self) -> Realloc:
+        self._match(TokenKind.REALLOC)
+        target = self._identifier()
+        new_size = self._expr()
+        self._consume_newline()
+        return Realloc(target=target, new_size=new_size)
+
+    def _free(self) -> Free:
+        self._match(TokenKind.FREE)
+        target = self._identifier()
+        self._consume_newline()
+        return Free(target=target)
+
+    def _sizeof(self) -> Sizeof:
+        self._match(TokenKind.SIZEOF)
+        target = self._identifier()
+        result = self._identifier()
+        self._consume_newline()
+        return Sizeof(target=target, result=result)
+
+    def _reg(self) -> Reg:
+        self._match(TokenKind.REG)
+        register = self._match(TokenKind.IDENT).lexeme
+        tok = self._peek()
+        if tok.kind == TokenKind.IDENT:
+            operation = self._match(TokenKind.IDENT).lexeme
+        elif tok.kind == TokenKind.LOAD:
+            operation = self._match(TokenKind.LOAD).lexeme
+        elif tok.kind == TokenKind.STORE:
+            operation = self._match(TokenKind.STORE).lexeme
+        elif tok.kind == TokenKind.ADD:
+            operation = self._match(TokenKind.ADD).lexeme
+        elif tok.kind == TokenKind.SUB:
+            operation = self._match(TokenKind.SUB).lexeme
+        elif tok.kind == TokenKind.MUL:
+            operation = self._match(TokenKind.MUL).lexeme
+        elif tok.kind == TokenKind.DIV:
+            operation = self._match(TokenKind.DIV).lexeme
+        elif tok.kind == TokenKind.CLEAR:
+            operation = self._match(TokenKind.CLEAR).lexeme
+        elif tok.kind == TokenKind.INC:
+            operation = self._match(TokenKind.INC).lexeme
+        elif tok.kind == TokenKind.DEC:
+            operation = self._match(TokenKind.DEC).lexeme
+        else:
+            raise SyntaxError(f"Expected register operation, got {tok.kind.name} on line {tok.line}")
+        unary_ops = ['clear', 'inc', 'dec']
+        if operation.lower() in unary_ops:
+            variable = None
+        elif self._peek().kind == TokenKind.IDENT:
+            variable = self._identifier()
+        elif self._peek().kind == TokenKind.NUMBER:
+            num_tok = self._match(TokenKind.NUMBER)
+            variable = Identifier(name=num_tok.lexeme)
+        else:
+            raise SyntaxError(f"Expected identifier or number after register operation, got {self._peek().kind.name} on line {self._peek().line}")
+        self._consume_newline()
+        return Reg(register=register, operation=operation, variable=variable)
 

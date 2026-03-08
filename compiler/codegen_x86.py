@@ -32,6 +32,13 @@ from .ir import (
     IRToint,
     IRPrtln,
     IRCondJump,
+    IRPush,
+    IRPop,
+    IRMalloc,
+    IRRealloc,
+    IRFree,
+    IRSizeof,
+    IRReg,
 )
 
 
@@ -101,6 +108,20 @@ class CodegenX86:
             prtln()
         elif isinstance(instr, IRCondJump):
             self._emit_cond_jump(instr)
+        elif isinstance(instr, IRPush):
+            self._emit_push(instr)
+        elif isinstance(instr, IRPop):
+            self._emit_pop(instr)
+        elif isinstance(instr, IRMalloc):
+            self._emit_malloc(instr)
+        elif isinstance(instr, IRRealloc):
+            self._emit_realloc(instr)
+        elif isinstance(instr, IRFree):
+            self._emit_free(instr)
+        elif isinstance(instr, IRSizeof):
+            self._emit_sizeof(instr)
+        elif isinstance(instr, IRReg):
+            self._emit_reg(instr)
         else:
             raise NotImplementedError(f"Codegen для {type(instr).__name__} не реализован")
 
@@ -147,6 +168,34 @@ class CodegenX86:
             raise ValueError(f"Неподдерживаемый оператор сравнения {instr.op}")
 
         context_manager.asm_lines.append(f"jmp {label_false}")
+
+    def _emit_push(self, instr: IRPush) -> None:
+        from modules.memory import push_value
+        push_value(instr.var)
+
+    def _emit_pop(self, instr: IRPop) -> None:
+        from modules.memory import pop_value
+        pop_value(instr.var)
+
+    def _emit_malloc(self, instr: IRMalloc) -> None:
+        from modules.memory import malloc_memory
+        malloc_memory(instr.target, instr.size)
+
+    def _emit_realloc(self, instr: IRRealloc) -> None:
+        from modules.memory import realloc_memory
+        realloc_memory(instr.target, instr.new_size)
+
+    def _emit_free(self, instr: IRFree) -> None:
+        from modules.memory import free_memory
+        free_memory(instr.var)
+
+    def _emit_sizeof(self, instr: IRSizeof) -> None:
+        from modules.memory import get_sizeof
+        get_sizeof(instr.target, instr.result)
+
+    def _emit_reg(self, instr: IRReg) -> None:
+        from modules.registers import reg_operation
+        reg_operation(instr.register, instr.operation, instr.variable)
 
     # === обёртка вокруг старого пролога/эпилога ===
     def _emit_program_epilogue(self) -> None:

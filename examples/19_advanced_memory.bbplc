@@ -1,0 +1,71 @@
+; Example 19: Advanced memory and register operations
+; Demonstrates: MALLOC, REALLOC, PUSH/POP, REG, SIZEOF
+
+DECLARE DD array_size = 10
+DECLARE DD array_ptr = 0
+DECLARE DD temp_value = 0
+DECLARE DD size_info = 0
+
+DECLARE DB start_msg = "=== Advanced Memory Demo ==="
+DECLARE DB alloc_msg = "Allocated array of 10 integers"
+DECLARE DB realloc_msg = "Reallocated to 20 integers"
+DECLARE DB stack_msg = "Stack operations completed"
+DECLARE DB reg_msg = "Register operations: "
+
+PRINT start_msg
+PRTLN
+PRTLN
+
+; Allocate memory for array
+MALLOC array_ptr array_size
+PRINT alloc_msg
+PRTLN
+
+; Reallocate to larger size
+DECLARE DD new_size = 20
+REALLOC array_ptr new_size
+PRINT realloc_msg
+PRTLN
+
+; Get size information
+SIZEOF array_size size_info
+DECLARE DB size_msg = "Original size variable is "
+PRINT size_msg
+TOSTR size_info
+PRINT size_info
+DECLARE DB bytes_msg = " bytes"
+PRINT bytes_msg
+PRTLN
+
+; Stack operations
+DECLARE DD stack_val1 = 42
+DECLARE DD stack_val2 = 99
+
+PUSH stack_val1
+PUSH stack_val2
+
+POP temp_value  ; Should get 99 (LIFO)
+DECLARE DD popped_val = 0
+MOV popped_val temp_value
+
+POP temp_value  ; Should get 42
+ADD popped_val temp_value
+
+PRINT stack_msg
+PRTLN
+
+; Register operations
+REG EAX LOAD popped_val
+REG EAX MUL 2  ; Multiply by 2
+REG EAX STORE temp_value
+
+PRINT reg_msg
+TOSTR temp_value
+PRINT temp_value
+PRTLN
+
+; Cleanup
+FREE array_ptr
+DECLARE DB cleanup_msg = "Memory cleaned up"
+PRINT cleanup_msg
+PRTLN

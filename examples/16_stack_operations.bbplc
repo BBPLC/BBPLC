@@ -1,0 +1,30 @@
+; Example 16: Stack operations (PUSH/POP)
+; Demonstrates: PUSH, POP
+
+DECLARE DD value1 = 42
+DECLARE DD value2 = 100
+DECLARE DD result = 0
+
+DECLARE DB push_msg = "Pushed values to stack"
+DECLARE DB pop_msg = "Popped values from stack: "
+
+PRINT push_msg
+PRTLN
+
+; Push values onto stack
+PUSH value1
+PUSH value2
+
+; Pop values from stack (LIFO - Last In, First Out)
+POP result
+PRINT pop_msg
+TOSTR result
+PRINT result
+PRTLN
+
+POP result
+DECLARE DB second_msg = "Second value: "
+PRINT second_msg
+TOSTR result
+PRINT result
+PRTLN

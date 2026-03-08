@@ -106,3 +106,43 @@ class IRCondJump(IRInstr):
     true_label: str
     false_label: str
 
+
+@dataclass
+class IRPush(IRInstr):
+    var: str
+
+
+@dataclass
+class IRPop(IRInstr):
+    var: str
+
+
+@dataclass
+class IRMalloc(IRInstr):
+    target: str
+    size: str
+
+
+@dataclass
+class IRRealloc(IRInstr):
+    target: str
+    new_size: str
+
+
+@dataclass
+class IRFree(IRInstr):
+    var: str
+
+
+@dataclass
+class IRSizeof(IRInstr):
+    target: str
+    result: str
+
+
+@dataclass
+class IRReg(IRInstr):
+    register: str
+    operation: str
+    variable: str
+

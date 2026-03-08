@@ -22,6 +22,13 @@ from .ir import (
     IRToint,
     IRPrtln,
     IRCondJump,
+    IRPush,
+    IRPop,
+    IRMalloc,
+    IRRealloc,
+    IRFree,
+    IRSizeof,
+    IRReg,
 )
 
 
@@ -84,6 +91,26 @@ class IRBuilder:
             self._emit(IRPrtln())
         elif isinstance(node, ast.If):
             self._emit_if(node)
+        elif isinstance(node, ast.Push):
+            self._emit(IRPush(var=node.value.name))
+        elif isinstance(node, ast.Pop):
+            self._emit(IRPop(var=node.target.name))
+        elif isinstance(node, ast.Malloc):
+            size_text = self._expr_to_literal_text(node.size)
+            self._emit(IRMalloc(target=node.target.name, size=size_text))
+        elif isinstance(node, ast.Realloc):
+            new_size_text = self._expr_to_literal_text(node.new_size)
+            self._emit(IRRealloc(target=node.target.name, new_size=new_size_text))
+        elif isinstance(node, ast.Free):
+            self._emit(IRFree(var=node.target.name))
+        elif isinstance(node, ast.Sizeof):
+            self._emit(IRSizeof(target=node.target.name, result=node.result.name))
+        elif isinstance(node, ast.Reg):
+            if node.variable is not None:
+                var_text = self._expr_to_literal_text(node.variable)
+            else:
+                var_text = ""
+            self._emit(IRReg(register=node.register, operation=node.operation, variable=var_text))
         else:
             raise NotImplementedError(f"IR для {type(node).__name__} не реализован")
 
