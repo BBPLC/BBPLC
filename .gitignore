@@ -3,3 +3,5 @@
 code.bbplc
 *.asm
 output
+
+/compiler/__pycache__
