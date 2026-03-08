@@ -1,0 +1,42 @@
+; Example 13: Factorial
+; Demonstrates: loop, multiplication, conditions
+
+; Number for factorial
+DECLARE DD n = 5
+; Variable for result accumulation (start with 1)
+DECLARE DD factorial = 1
+; Counter for loop
+DECLARE DD counter = 1
+
+; Strings for output
+DECLARE DB input_label = "Computing factorial of: "
+DECLARE DB result_label = "Result: "
+
+; === Print initial number ===
+PRINT input_label
+TOSTR n
+PRINT n
+PRTLN
+PRTLN
+
+; === Factorial calculation loop ===
+LABEL factorial_loop
+
+; Check: counter <= n?
+IF counter <= n
+THEN
+    ; Multiply factorial by current counter value
+    MUL factorial counter
+    ; Increment counter
+    ADD counter 1
+    ; Repeat loop
+    GOTO factorial_loop
+ELSE
+    ; Exit loop when counter > n
+ENDIF
+
+; === Print result ===
+PRINT result_label
+TOSTR factorial
+PRINT factorial
+PRTLN

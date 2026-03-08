@@ -1,0 +1,31 @@
+; Example 2: Different data types
+; Demonstrates: DB, DW, DD types
+
+; DB - 1 byte for characters/strings
+DECLARE DB byte_value = "A"
+; DW - 2 bytes for words
+DECLARE DW word_value = 256
+; DD - 4 bytes for double words (regular numbers)
+DECLARE DD dword_value = 65536
+
+; Declare labels for output
+DECLARE DB label1 = "Byte: "
+DECLARE DB label2 = "Word: "
+DECLARE DB label3 = "DWord: "
+
+; Print byte value
+PRINT label1
+PRINT byte_value
+PRTLN
+
+; Convert word to string and print
+PRINT label2
+TOSTR word_value
+PRINT word_value
+PRTLN
+
+; Convert double word to string and print
+PRINT label3
+TOSTR dword_value
+PRINT dword_value
+PRTLN

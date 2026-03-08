@@ -1,0 +1,36 @@
+; Example 12: Countdown
+; Demonstrates: loop with LABEL/GOTO and SUB
+
+; Variable for countdown
+DECLARE DD countdown = 10
+; Strings for output
+DECLARE DB countdown_msg = "Countdown: "
+DECLARE DB liftoff_msg = "LIFTOFF!"
+
+; === Label for loop jump ===
+LABEL countdown_loop
+
+; Print current countdown value
+PRINT countdown_msg
+; Convert number to string
+TOSTR countdown
+; Print number
+PRINT countdown
+PRTLN
+
+; === Decrement counter by 1 ===
+SUB countdown 1
+
+; === Check: is countdown still active? ===
+IF countdown >= 0
+THEN
+    ; If counter is non-negative, repeat loop
+    GOTO countdown_loop
+ELSE
+    ; If counter is negative, exit
+ENDIF
+
+; After loop print message
+PRTLN
+PRINT liftoff_msg
+PRTLN

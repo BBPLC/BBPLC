@@ -1,0 +1,59 @@
+; Example 10: Complex program - Simple calculator
+; Demonstrates: all language features together
+
+; Variables for results and temporary storage
+DECLARE DD result = 0
+DECLARE DD temp = 15
+
+; Strings for output
+DECLARE DB welcome = "=== Simple Calculator ==="
+DECLARE DB calc1 = "15 + 10 = "
+DECLARE DB calc2 = "25 - 8 = "
+DECLARE DB calc3 = "7 * 6 = "
+DECLARE DB calc4 = "Final result:"
+
+; === Program header ===
+PRINT welcome
+PRTLN
+PRTLN
+
+; === Operation 1: addition (15 + 10) ===
+; Copy 15 to result
+MOV result temp
+; Add 10
+ADD result 10
+; Print result
+PRINT calc1
+TOSTR result
+PRINT result
+PRTLN
+
+; === Operation 2: subtraction (25 - 8) ===
+; Copy 25 to result
+MOV result 25
+; Subtract 8
+SUB result 8
+; Print result
+PRINT calc2
+TOSTR result
+PRINT result
+PRTLN
+
+; === Operation 3: multiplication (7 * 6) ===
+; Copy 7 to result
+MOV result 7
+; Multiply by 6
+MUL result 6
+; Print result
+PRINT calc3
+TOSTR result
+PRINT result
+PRTLN
+
+; === Final result ===
+PRTLN
+PRINT calc4
+PRTLN
+TOSTR result
+PRINT result
+PRTLN

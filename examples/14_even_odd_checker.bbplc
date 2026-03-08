@@ -1,0 +1,61 @@
+; Example 14: Even/odd checker
+; Demonstrates: IF-ELSE, MOV, DIV
+
+; Working variable for division
+DECLARE DD numbers = 10
+; Numbers to check
+DECLARE DD check1 = 7
+DECLARE DD check2 = 12
+DECLARE DD check3 = 33
+
+; Result messages
+DECLARE DB even_msg = "Even number"
+DECLARE DB odd_msg = "Odd number"
+DECLARE DB divider_msg = "Dividing by 2:"
+DECLARE DB colon = ": "
+
+; === Check 7 ===
+PRINT check1
+PRINT colon
+; Copy 7 to working variable
+MOV numbers check1
+; Divide by 2 (if divides evenly = even)
+DIV numbers 2
+; Restore original value
+MOV numbers check1
+; If remainder is zero, number is even
+IF numbers == 0
+THEN
+    PRINT even_msg
+ELSE
+    PRINT odd_msg
+ENDIF
+PRTLN
+
+; === Check 12 ===
+PRINT check2
+PRINT colon
+MOV numbers check2
+DIV numbers 2
+MOV numbers check2
+IF numbers == 0
+THEN
+    PRINT even_msg
+ELSE
+    PRINT odd_msg
+ENDIF
+PRTLN
+
+; === Check 33 ===
+PRINT check3
+PRINT colon
+MOV numbers check3
+DIV numbers 2
+MOV numbers check3
+IF numbers == 0
+THEN
+    PRINT even_msg
+ELSE
+    PRINT odd_msg
+ENDIF
+PRTLN

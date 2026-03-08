@@ -1,0 +1,37 @@
+; Example 6: Conditional statements
+; Demonstrates: IF, THEN, ELSE, ENDIF
+
+; Variable to check
+DECLARE DD num = 42
+
+; Messages for different conditions
+DECLARE DB greater_msg = "Number is greater than 10"
+DECLARE DB equal_msg = "Number is equal to 10"
+DECLARE DB less_msg = "Number is less than 10"
+
+; === First check: is number greater than 10? ===
+IF num > 10
+THEN
+    ; If condition is true, print this message
+    PRINT greater_msg
+ELSE
+    ; Otherwise print this message
+    PRINT less_msg
+ENDIF
+
+; Print new line
+PRTLN
+
+; === Second check: is number equal to 42? ===
+IF num == 42
+THEN
+    ; If condition is true, print this message
+    PRINT equal_msg
+ELSE
+    ; Otherwise declare and print another message
+    DECLARE DB not_equal = "Not equal"
+    PRINT not_equal
+ENDIF
+
+; Print new line
+PRTLN

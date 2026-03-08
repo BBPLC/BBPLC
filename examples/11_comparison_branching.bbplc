@@ -1,0 +1,46 @@
+; Example 11: Branching with comparisons
+; Demonstrates: IF with different comparison operators
+
+; Variable to check
+DECLARE DD age = 25
+; Threshold values
+DECLARE DD min_age = 18
+DECLARE DD max_age = 65
+
+; Messages for different statuses
+DECLARE DB adult_msg = "You are an adult"
+DECLARE DB minor_msg = "You are a minor"
+DECLARE DB senior_msg = "You are a senior"
+DECLARE DB working_msg = "You are in working age"
+
+; === Print age ===
+DECLARE DB age_label = "Age: "
+PRINT age_label
+TOSTR age
+PRINT age
+PRTLN
+PRTLN
+
+; === Check 1: is adult? (>= 18) ===
+IF age >= 18
+THEN
+    ; If age is greater than or equal to 18
+    PRINT adult_msg
+ELSE
+    ; Otherwise
+    PRINT minor_msg
+ENDIF
+
+PRTLN
+
+; === Check 2: retirement age? (> 65) ===
+IF age > 65
+THEN
+    ; If age is greater than 65
+    PRINT senior_msg
+ELSE
+    ; Otherwise (working age)
+    PRINT working_msg
+ENDIF
+
+PRTLN

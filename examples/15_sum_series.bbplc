@@ -1,0 +1,39 @@
+; Example 15: Sum of series from 1 to N
+; Demonstrates: loop, ADD, conditions
+
+; Upper limit
+DECLARE DD n = 10
+; Variable for sum accumulation
+DECLARE DD sum = 0
+; Counter for loop
+DECLARE DD counter = 1
+
+; Strings for output
+DECLARE DB start_msg = "Sum of 1 to 10:"
+DECLARE DB result_msg = "Result: "
+
+; === Print operation description ===
+PRINT start_msg
+PRTLN
+
+; === Sum calculation loop ===
+LABEL sum_loop
+
+; Check: counter <= n?
+IF counter <= n
+THEN
+    ; Add current value to sum
+    ADD sum counter
+    ; Increment counter
+    ADD counter 1
+    ; Repeat loop
+    GOTO sum_loop
+ELSE
+    ; Exit loop when counter > n
+ENDIF
+
+; === Print final result ===
+PRINT result_msg
+TOSTR sum
+PRINT sum
+PRTLN

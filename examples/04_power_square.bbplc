@@ -1,0 +1,33 @@
+; Example 4: Power and square operations
+; Demonstrates: SQR, POW
+
+; Base values
+DECLARE DD base = 3
+DECLARE DD exp = 4
+; Variables for results
+DECLARE DD square_result = 3
+DECLARE DD power_result = 3
+
+; Labels for output
+DECLARE DB square_label = "3 * 3 = "
+DECLARE DB power_label = "3 ^ 4 = "
+
+; === Square operation (number * number) ===
+; Square the number
+SQR square_result
+; Print label
+PRINT square_label
+; Convert to string and print result
+TOSTR square_result
+PRINT square_result
+PRTLN
+
+; === Power operation (3^4) ===
+; Raise number to the power of exp
+POW power_result exp
+; Print label
+PRINT power_label
+; Convert to string and print result
+TOSTR power_result
+PRINT power_result
+PRTLN

@@ -1,0 +1,7 @@
+; Example 1: Simple text output
+; Demonstrates: DECLARE, PRINT
+
+; Declare a variable of type DB (byte) with a string value
+DECLARE DB hello = "Hello BBPLC!"
+; Print the variable to the screen
+PRINT hello

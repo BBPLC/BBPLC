@@ -1,0 +1,23 @@
+; Example 9: Reserved memory
+; Demonstrates: DECLARE RESERVE, READ
+
+; String with prompt
+DECLARE DB instruction = "Enter your name: "
+; Reserved buffer 64 bytes for name input
+DECLARE RESERVE RB name_buffer 64
+; Greeting
+DECLARE DB greeting = "Hello, "
+
+; === Input data ===
+; Print prompt
+PRINT instruction
+; Read string into reserved buffer
+READ name_buffer
+
+; === Output result ===
+; Print greeting
+PRINT greeting
+; Print entered name
+PRINT name_buffer
+; New line
+PRTLN

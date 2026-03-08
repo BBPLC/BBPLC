@@ -1,0 +1,38 @@
+; Example 7: Loops with LABEL and GOTO
+; Demonstrates: LABEL, GOTO, IF conditions
+
+; Variables for loop
+DECLARE DD counter = 0
+DECLARE DD limit = 5
+
+; Strings for output
+DECLARE DB count_msg = "Count: "
+DECLARE DB done_msg = "Done!"
+
+; === Label for loop start ===
+LABEL loop_start
+
+; Print current counter value
+PRINT count_msg
+; Convert number to string
+TOSTR counter
+; Print number
+PRINT counter
+; Print new line
+PRTLN
+
+; === Increment counter by 1 ===
+ADD counter 1
+
+; === Check loop continuation condition ===
+IF counter < limit
+THEN
+    ; If counter is less than limit, jump to label
+    GOTO loop_start
+ELSE
+    ; Otherwise exit loop
+ENDIF
+
+; After loop print completion message
+PRINT done_msg
+PRTLN

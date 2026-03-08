@@ -1,0 +1,43 @@
+; Example 8: String and number conversion
+; Demonstrates: TOSTR, TOINT, DECLARE
+
+; Initial number
+DECLARE DD numb = 12345
+
+; Labels for output
+DECLARE DB conversion_label = "Number converted to string: "
+DECLARE DB number_label = "Initial number: "
+
+; === Print initial number ===
+PRINT number_label
+; Convert number to string (TOSTR creates buffer)
+TOSTR numb
+; Print converted number
+PRINT numb
+PRTLN
+
+; Empty line for separation
+PRTLN
+
+; === String to number conversion ===
+; Declare buffer for input
+DECLARE RESERVE RB input_str 20
+DECLARE DB input_prompt = "Enter number (1-10): "
+
+; Print prompt and read input
+PRINT input_prompt
+READ input_str
+
+; Declare variable for result
+DECLARE DD parsed_num = 0
+; Copy value
+MOV parsed_num input_str
+; Convert string to number (from input_str buffer to parsed_num)
+TOINT parsed_num
+
+; Print conversion result
+DECLARE DB result_label = "Parsed number: "
+PRINT result_label
+TOSTR parsed_num
+PRINT parsed_num
+PRTLN
