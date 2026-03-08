@@ -1,0 +1,44 @@
+; Example 20: Else If chaining
+; Demonstrates: multiple conditions with ELSE IF
+
+; Student score
+DECLARE DD score = 85
+
+; Grade labels
+DECLARE DB grade_A = "Grade A (90+)"
+DECLARE DB grade_B = "Grade B (80-89)"
+DECLARE DB grade_C = "Grade C (70-79)"
+DECLARE DB grade_D = "Grade D (60-69)"
+DECLARE DB grade_F = "Grade F (<60)"
+
+DECLARE DB result_label = "Your grade: "
+
+; Print score
+DECLARE DB score_label = "Score: "
+PRINT score_label
+TOSTR score
+PRINT score
+PRTLN
+PRTLN
+
+; Check grade with multiple conditions
+IF score >= 90
+THEN
+    PRINT result_label
+    PRINT grade_A
+ELSE IF score >= 80
+THEN
+    PRINT result_label
+    PRINT grade_B
+ELSE IF score >= 70
+THEN
+    PRINT result_label
+    PRINT grade_C
+ELSE IF score >= 60
+THEN
+    PRINT result_label
+    PRINT grade_D
+ELSE
+    PRINT result_label
+    PRINT grade_F
+ENDIF

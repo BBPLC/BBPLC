@@ -1,0 +1,27 @@
+; Example 21: Macros
+; Demonstrates: MACRO and ENDMACRO for reusable code blocks
+
+; Define a macro to print a number with a label
+MACRO print_with_label
+    PRINT label
+    TOSTR value
+    PRINT value
+    PRTLN
+ENDMACRO
+
+; Variables
+DECLARE DD value = 42
+DECLARE DB label = "The answer is: "
+
+; Use the macro
+print_with_label
+
+; Another macro usage with different values
+DECLARE DD value = 100
+DECLARE DB label = "New value: "
+print_with_label
+
+; More macro usage
+DECLARE DD value = 7
+DECLARE DB label = "Lucky number: "
+print_with_label

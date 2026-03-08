@@ -33,6 +33,9 @@ from .ast_nodes import (
     Free,
     Sizeof,
     Reg,
+    Macro,
+    Proc,
+    Return,
 )
 
 
@@ -153,6 +156,12 @@ class Parser:
             return self._sizeof()
         if kind is TokenKind.REG:
             return self._reg()
+        if kind is TokenKind.MACRO:
+            return self._macro()
+        if kind is TokenKind.PROC:
+            return self._proc()
+        if kind is TokenKind.RETURN:
+            return self._return()
 
         raise SyntaxError(f"Неожиданное начало оператора: {kind.name}")
 
@@ -241,22 +250,24 @@ class Parser:
         self._consume_newline()
         return Prtln()
 
-    def _if_stmt(self) -> If:
+    def _if_stmt(self, match_endif: bool = True) -> If:
         self._match(TokenKind.IF)
         left = self._expr()
-        op_tok = self._match(TokenKind.EQ, TokenKind.LT, TokenKind.GT)
+        op_tok = self._match(TokenKind.EQ, TokenKind.LT, TokenKind.GT, TokenKind.LT_EQ, TokenKind.GT_EQ)
         op_map = {
             TokenKind.EQ: "==",
             TokenKind.LT: "<",
             TokenKind.GT: ">",
+            TokenKind.LT_EQ: "<=",
+            TokenKind.GT_EQ: ">=",
         }
         op = op_map[op_tok.kind]
         right = self._expr()
+        self._consume_newline()
         self._match(TokenKind.THEN)
         self._consume_newline()
 
         then_body: List[Node] = []
-        else_body: List[Node] = []
 
         while self._peek().kind not in (
             TokenKind.ELSE,
@@ -265,13 +276,22 @@ class Parser:
         ):
             then_body.append(self._statement())
 
-        if self._optional(TokenKind.ELSE):
-            self._consume_newline()
-            while self._peek().kind not in (TokenKind.ENDIF, TokenKind.EOF):
-                else_body.append(self._statement())
+        else_body: Optional[Union[List[Node], If]] = None
 
-        self._match(TokenKind.ENDIF)
-        self._consume_newline()
+        if self._optional(TokenKind.ELSE):
+            if self._peek().kind is TokenKind.IF:
+                # Else if
+                else_body = self._if_stmt(match_endif=False)
+            else:
+                # Regular else
+                self._consume_newline()
+                else_body = []
+                while self._peek().kind not in (TokenKind.ENDIF, TokenKind.EOF):
+                    else_body.append(self._statement())
+
+        if match_endif:
+            self._match(TokenKind.ENDIF)
+            self._consume_newline()
         return If(left=left, op=op, right=right, then_body=then_body, else_body=else_body)
 
     def _push(self) -> Push:
@@ -351,4 +371,34 @@ class Parser:
             raise SyntaxError(f"Expected identifier or number after register operation, got {self._peek().kind.name} on line {self._peek().line}")
         self._consume_newline()
         return Reg(register=register, operation=operation, variable=variable)
+
+    def _macro(self) -> Macro:
+        self._match(TokenKind.MACRO)
+        name = self._identifier()
+        self._consume_newline()
+        body: List[Node] = []
+        while self._peek().kind not in (TokenKind.ENDMACRO, TokenKind.EOF):
+            body.append(self._statement())
+        self._match(TokenKind.ENDMACRO)
+        self._consume_newline()
+        return Macro(name=name, body=body)
+
+    def _proc(self) -> Proc:
+        self._match(TokenKind.PROC)
+        name = self._identifier()
+        self._consume_newline()
+        body: List[Node] = []
+        while self._peek().kind not in (TokenKind.ENDPROC, TokenKind.EOF):
+            body.append(self._statement())
+        self._match(TokenKind.ENDPROC)
+        self._consume_newline()
+        return Proc(name=name, body=body)
+
+    def _return(self) -> Return:
+        self._match(TokenKind.RETURN)
+        value = None
+        if self._peek().kind in (TokenKind.IDENT, TokenKind.NUMBER, TokenKind.STRING):
+            value = self._expr()
+        self._consume_newline()
+        return Return(value=value)
 

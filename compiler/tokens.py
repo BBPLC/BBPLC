@@ -45,11 +45,19 @@ class TokenKind(Enum):
     CLEAR = auto()
     INC = auto()
     DEC = auto()
+    MACRO = auto()
+    ENDMACRO = auto()
+    PROC = auto()
+    ENDPROC = auto()
+    RETURN = auto()
+    ELSEIF = auto()  # optional, but for clarity
 
     # операторы
     EQ = auto()       # ==
     LT = auto()       # <
     GT = auto()       # >
+    LT_EQ = auto()    # <=
+    GT_EQ = auto()    # >=
     ASSIGN = auto()   # =
     COLON = auto()    # :
 
@@ -88,6 +96,11 @@ KEYWORDS = {
     "CLEAR": TokenKind.CLEAR,
     "INC": TokenKind.INC,
     "DEC": TokenKind.DEC,
+    "MACRO": TokenKind.MACRO,
+    "ENDMACRO": TokenKind.ENDMACRO,
+    "PROC": TokenKind.PROC,
+    "ENDPROC": TokenKind.ENDPROC,
+    "RETURN": TokenKind.RETURN,
 }
 
 

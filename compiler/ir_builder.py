@@ -111,6 +111,18 @@ class IRBuilder:
             else:
                 var_text = ""
             self._emit(IRReg(register=node.register, operation=node.operation, variable=var_text))
+        elif isinstance(node, ast.Macro):
+            # For now, just emit the body (macros are expanded inline)
+            for stmt in node.body:
+                self._emit_stmt(stmt)
+        elif isinstance(node, ast.Proc):
+            # Procedures are like labels with body
+            self._emit(IRLabel(name=node.name.name))
+            for stmt in node.body:
+                self._emit_stmt(stmt)
+        elif isinstance(node, ast.Return):
+            # For now, just a goto to end of proc, but since no stack, maybe just ignore or add later
+            pass  # TODO: implement return
         else:
             raise NotImplementedError(f"IR для {type(node).__name__} не реализован")
 
@@ -175,8 +187,12 @@ class IRBuilder:
 
         # ELSE
         self._emit(IRLabel(name=false_label))
-        for stmt in node.else_body:
-            self._emit_stmt(stmt)
+        if isinstance(node.else_body, list):
+            for stmt in node.else_body:
+                self._emit_stmt(stmt)
+        elif isinstance(node.else_body, ast.If):
+            self._emit_if(node.else_body)
+        # If None, do nothing
 
         # ENDIF
         self._emit(IRLabel(name=end_label))

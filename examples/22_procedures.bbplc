@@ -1,0 +1,46 @@
+; Example 22: Procedures (Functions)
+; Demonstrates: PROC, ENDPROC, and RETURN
+
+; Define a simple procedure that doubles a number
+PROC double_value
+    MUL input 2
+    RETURN result
+ENDPROC
+
+; Variables for the procedure
+DECLARE DD input = 21
+DECLARE DD result = 0
+
+; Call the procedure
+DECLARE DB before_label = "Original value: "
+PRINT before_label
+TOSTR input
+PRINT input
+PRTLN
+
+; Execute procedure (conceptually, currently just shows the pattern)
+MUL input 2
+MOV result input
+
+DECLARE DB after_label = "Doubled value: "
+PRINT after_label
+TOSTR result
+PRINT result
+PRTLN
+
+; Example of procedure concept with another calculation
+PROC square_number
+    SQR num
+    RETURN squared
+ENDPROC
+
+DECLARE DD num = 5
+DECLARE DD squared = 0
+
+DECLARE DB square_label = "5 squared is: "
+PRINT square_label
+MOV squared num
+SQR squared
+TOSTR squared
+PRINT squared
+PRTLN

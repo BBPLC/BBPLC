@@ -103,12 +103,22 @@ class Lexer:
             return Token(TokenKind.EQ, "==", self.line, self.col - 2)
 
         if ch == "<":
-            self._advance()
-            return Token(TokenKind.LT, "<", self.line, self.col - 1)
+            if self._peek(1) == "=":
+                self._advance()
+                self._advance()
+                return Token(TokenKind.LT_EQ, "<=", self.line, self.col - 2)
+            else:
+                self._advance()
+                return Token(TokenKind.LT, "<", self.line, self.col - 1)
 
         if ch == ">":
-            self._advance()
-            return Token(TokenKind.GT, ">", self.line, self.col - 1)
+            if self._peek(1) == "=":
+                self._advance()
+                self._advance()
+                return Token(TokenKind.GT_EQ, ">=", self.line, self.col - 2)
+            else:
+                self._advance()
+                return Token(TokenKind.GT, ">", self.line, self.col - 1)
 
         if ch == "=":
             self._advance()

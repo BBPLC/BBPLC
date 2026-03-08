@@ -164,6 +164,10 @@ class CodegenX86:
             context_manager.asm_lines.append(f"jg {label_true}")
         elif instr.op == "<":
             context_manager.asm_lines.append(f"jl {label_true}")
+        elif instr.op == ">=":
+            context_manager.asm_lines.append(f"jge {label_true}")
+        elif instr.op == "<=":
+            context_manager.asm_lines.append(f"jle {label_true}")
         else:
             raise ValueError(f"Неподдерживаемый оператор сравнения {instr.op}")
 

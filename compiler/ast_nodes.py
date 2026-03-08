@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Union
 
 
 @dataclass
@@ -122,7 +122,7 @@ class If(Node):
     op: str  # '==', '<', '>'
     right: Expr
     then_body: List[Node]
-    else_body: List[Node]
+    else_body: Optional[Union[List[Node], 'If']]
 
 
 @dataclass
@@ -163,4 +163,21 @@ class Reg(Node):
     register: str  # 'eax', 'ebx', etc.
     operation: str  # 'load', 'store', 'add', etc.
     variable: Optional[Expr]  # Can be Identifier, NumberLiteral, or None for unary ops
+
+
+@dataclass
+class Macro(Node):
+    name: Identifier
+    body: List[Node]
+
+
+@dataclass
+class Proc(Node):
+    name: Identifier
+    body: List[Node]
+
+
+@dataclass
+class Return(Node):
+    value: Optional[Expr]
 
