@@ -7,7 +7,7 @@ READ n
 
 PRTLN
 
-RINT secret
+PRINT secret
 
 TOSTR n
 PRINT n
