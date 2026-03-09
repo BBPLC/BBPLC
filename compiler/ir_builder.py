@@ -64,13 +64,17 @@ class IRBuilder:
         elif isinstance(node, ast.Mov):
             self._emit(self._mov_to_ir(node))
         elif isinstance(node, ast.Add):
-            self._emit(IRAdd(left=node.left.name, right=node.right.name))
+            right_text = self._expr_to_literal_text(node.right)
+            self._emit(IRAdd(left=node.left.name, right=right_text))
         elif isinstance(node, ast.Sub):
-            self._emit(IRSub(left=node.left.name, right=node.right.name))
+            right_text = self._expr_to_literal_text(node.right)
+            self._emit(IRSub(left=node.left.name, right=right_text))
         elif isinstance(node, ast.Mul):
-            self._emit(IRMul(left=node.left.name, right=node.right.name))
+            right_text = self._expr_to_literal_text(node.right)
+            self._emit(IRMul(left=node.left.name, right=right_text))
         elif isinstance(node, ast.Div):
-            self._emit(IRDiv(left=node.left.name, right=node.right.name))
+            right_text = self._expr_to_literal_text(node.right)
+            self._emit(IRDiv(left=node.left.name, right=right_text))
         elif isinstance(node, ast.Sqr):
             self._emit(IRSqr(var=node.operand.name))
         elif isinstance(node, ast.Pow):
@@ -123,6 +127,10 @@ class IRBuilder:
         elif isinstance(node, ast.Return):
             # For now, just a goto to end of proc, but since no stack, maybe just ignore or add later
             pass  # TODO: implement return
+        elif isinstance(node, ast.Call):
+            # Macro calls - expand the macro body inline (lookup from defined macros)
+            # For now, treat as a label jump since procedures are labels
+            self._emit(IRGoto(target=node.name.name))
         else:
             raise NotImplementedError(f"IR для {type(node).__name__} не реализован")
 
@@ -158,6 +166,8 @@ class IRBuilder:
         # Для констант можно создать временную переменную через MOV
         if isinstance(expr, ast.NumberLiteral):
             tmp = self._new_label("tmp_")
+            # Declare the temporary variable first
+            self._emit(IRDeclare(reserve=False, type_or_size="DD", name=tmp, value="0"), is_decl=True)
             self._emit(IRMov(dest=tmp, src=str(expr.value)))
             return tmp
         raise NotImplementedError("Строковые константы в условиях пока не поддержаны")

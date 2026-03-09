@@ -36,6 +36,7 @@ from .ast_nodes import (
     Macro,
     Proc,
     Return,
+    Call,
 )
 
 
@@ -81,8 +82,17 @@ class Parser:
 
     # === выражения ===
     def _identifier(self) -> Identifier:
-        tok = self._match(TokenKind.IDENT)
-        return Identifier(tok.lexeme)
+        tok = self._peek()
+        if tok.kind is TokenKind.IDENT:
+            self.pos += 1
+            return Identifier(tok.lexeme)
+        # Allow LABEL token to be used as an identifier in contexts where it's not a keyword
+        if tok.kind is TokenKind.LABEL:
+            self.pos += 1
+            return Identifier(tok.lexeme)
+        raise SyntaxError(
+            f"Ожидалось IDENT, но получено {tok.kind.name} на строке {tok.line}"
+        )
 
     def _expr(self) -> Expr:
         tok = self._peek()
@@ -173,7 +183,11 @@ class Parser:
         type_or_size = type_tok.lexeme
         name = self._identifier()
         value = None
-        if self._optional(TokenKind.ASSIGN):
+        # For RESERVE declarations, allow size as a number without '='
+        if reserve and self._peek().kind is TokenKind.NUMBER:
+            value = NumberLiteral(int(self._peek().lexeme))
+            self.pos += 1
+        elif self._optional(TokenKind.ASSIGN):
             value = self._expr()
         self._consume_newline()
         return Declare(name=name, type_or_size=type_or_size, value=value, reserve=reserve)
@@ -189,9 +203,10 @@ class Parser:
         self._match(op_kind)
         left = self._identifier()
         right_expr = self._expr()
-        if not isinstance(right_expr, Identifier):
+        # Allow both identifiers and number literals for binary operations
+        if not isinstance(right_expr, (Identifier, NumberLiteral)):
             raise SyntaxError(
-                f"{op_kind.name} ожидает идентификатор вторым операндом"
+                f"{op_kind.name} ожидает идентификатор или число вторым операндом"
             )
         self._consume_newline()
         return cls(left=left, right=right_expr)
@@ -274,6 +289,10 @@ class Parser:
             TokenKind.ENDIF,
             TokenKind.EOF,
         ):
+            # Skip newlines in block bodies
+            if self._peek().kind is TokenKind.NEWLINE:
+                self.pos += 1
+                continue
             then_body.append(self._statement())
 
         else_body: Optional[Union[List[Node], If]] = None
@@ -287,6 +306,10 @@ class Parser:
                 self._consume_newline()
                 else_body = []
                 while self._peek().kind not in (TokenKind.ENDIF, TokenKind.EOF):
+                    # Skip newlines in else block
+                    if self._peek().kind is TokenKind.NEWLINE:
+                        self.pos += 1
+                        continue
                     else_body.append(self._statement())
 
         if match_endif:
@@ -378,6 +401,10 @@ class Parser:
         self._consume_newline()
         body: List[Node] = []
         while self._peek().kind not in (TokenKind.ENDMACRO, TokenKind.EOF):
+            # Skip newlines in macro body
+            if self._peek().kind is TokenKind.NEWLINE:
+                self.pos += 1
+                continue
             body.append(self._statement())
         self._match(TokenKind.ENDMACRO)
         self._consume_newline()
@@ -389,6 +416,10 @@ class Parser:
         self._consume_newline()
         body: List[Node] = []
         while self._peek().kind not in (TokenKind.ENDPROC, TokenKind.EOF):
+            # Skip newlines in procedure body
+            if self._peek().kind is TokenKind.NEWLINE:
+                self.pos += 1
+                continue
             body.append(self._statement())
         self._match(TokenKind.ENDPROC)
         self._consume_newline()

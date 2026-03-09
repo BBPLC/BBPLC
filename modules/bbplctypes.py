@@ -3,7 +3,7 @@ from modules.context_manager import variables, var_types, declares, buffers_crea
 
 DATA_DEFINE = {1:"db", 2:"dw", 4:"dd", 6:"dp", 8:"dq", 10:"dt"}
 DATA_RESERVE = {1:"rb", 2:"rw", 4:"rd", 6:"rf", 8:"rq", 10:"rt"}
-RESERVED_NAMES = {"str", "eax", "ebx", "ecx", "edx", "esi", "edi"}
+RESERVED_NAMES = {"str", "eax", "ebx", "ecx", "edx", "esi", "edi", "label"}
 
 def safe_name(name):
     return f"var_{name}" if name in RESERVED_NAMES else name
@@ -71,7 +71,10 @@ def declare(type_or_size, name, value=None, reserve=False):
     if isinstance(value, str) and ',' in value and not reserve_flag:
         count = len([b for b in value.split(',') if b.strip()])
         size = count
-        base_define = DATA_DEFINE.get(size, DATA_DEFINE.get(1))
+        # Keep using 'db' for string data, don't re-map based on size
+        if base_define.lower() in ('db', 'dw', 'dd', 'dp', 'dq', 'dt'):
+            # String data should always use 'db', not remap to other sizes
+            base_define = 'db'
     type_define = base_define
 
     var_types[name] = {'size': size, 'define': type_define, 'reserved': reserve_flag}
@@ -150,6 +153,17 @@ def toint(name):
     if name not in buffers_created or not buffers_created[name]:
         print(f"Warning: TOINT {name} без TOSTR — используем {name}_str_0")
         count = 0
+        # Declare the buffer variables if they don't exist
+        buf = safe_name(f"{name}_str_{count}")
+        len_var = safe_name(f"{buf}_len")
+        ptr_var = safe_name(f"{buf}_ptr")
+        if buf not in variables:
+            declares.append(f"{buf}: times 20 db 0 ; buffer for {name}")
+            declares.append(f"{len_var}: dd 0 ; length of {buf}")
+            declares.append(f"{ptr_var}: dd 0 ; pointer to start of {buf}")
+            variables[buf] = "tostr_buffer"
+            variables[len_var] = 0
+            variables[ptr_var] = 0
     else:
         count = max(buffers_created[name])
 

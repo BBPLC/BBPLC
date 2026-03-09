@@ -181,3 +181,7 @@ class Proc(Node):
 class Return(Node):
     value: Optional[Expr]
 
+
+@dataclass
+class Call(Node):
+    name: Identifier

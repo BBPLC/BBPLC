@@ -209,7 +209,7 @@ class CodegenX86:
         context_manager.asm_lines.append("int 0x80")
 
         # обработчик переполнения, который уже использует math.py
-        context_manager.asm_lines.append(".overflow:")
+        context_manager.asm_lines.append("overflow_handler:")
         context_manager.asm_lines.append("; simple overflow trap")
         context_manager.asm_lines.append("mov eax, 1")
         context_manager.asm_lines.append("mov ebx, 1")
@@ -219,6 +219,31 @@ class CodegenX86:
         prologue = [
             "format ELF executable 4",
             "entry start",
+            "",
+            "; dynamic memory management with brk syscall",
+            "malloc:",
+            "; eax = size (passed in eax)",
+            "push ebx",
+            "push ecx",
+            "mov ecx, eax",  # save requested size
+            "xor eax, eax",  # brk(0) - get current heap end
+            "int 0x80",
+            "mov ebx, eax",  # current heap end in ebx
+            "add eax, ecx",  # eax = current_end + size",
+            "int 0x80",      # brk(new_end)",
+            "mov eax, ebx",  # return old heap end as pointer",
+            "pop ecx",
+            "pop ebx",
+            "ret",
+            "",
+            "free:",
+            "; simple free - do nothing (no deallocation)",
+            "ret",
+            "",
+            "realloc:",
+            "; simple realloc - just malloc new block",
+            "; (ignores old pointer, allocates new memory)",
+            "jmp malloc",
             "",
         ] + context_manager.declares + ["start:"]
 
