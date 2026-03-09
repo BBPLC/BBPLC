@@ -1,2 +1,0 @@
-DECLARE DB greeting = "Hello, world"
-PRINT greeting
